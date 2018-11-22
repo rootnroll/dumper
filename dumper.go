@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -62,6 +63,10 @@ func main() {
 		os.Exit(1)
 	}
 	baseLogsDir := os.Args[1]
+	lifetime, err := strconv.Atoi(os.Args[2])
+	if err != nil {
+		panic(err)
+	}
 
 	ctx := context.Background()
 	cli, err := client.NewEnvClient()
@@ -78,9 +83,8 @@ func main() {
 		panic(err)
 	}
 	for _, container := range containers {
-		fmt.Println("Container:", container)
 		createdAt := time.Unix(container.Created, 0)
-		if time.Now().Sub(createdAt).Minutes() >= 20 {
+		if int(time.Now().Sub(createdAt).Minutes()) >= lifetime {
 			// Dump a container created more than 20 minutes ago
 			dumpContainer(cli, container, baseLogsDir)
 		}
